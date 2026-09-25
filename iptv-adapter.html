@@ -1,0 +1,3644 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0d1117">
+  <meta name="description" content="IPTV Adapter Conversion - procesamiento local de lotes">
+  <title>IPTV Adapter Conversion</title>
+
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/1071/1071164.png" type="image/png">
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css"
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    /* =========================================================
+       1. DESIGN TOKENS
+    ========================================================= */
+
+    :root {
+      --bg: #0d1117;
+      --bg-deep: #080b0f;
+
+      --surface: #161b22;
+      --surface-soft: #0d1117;
+      --surface-hover: #21262d;
+
+      --border: #30363d;
+      --border-soft: rgba(48, 54, 61, .65);
+      --border-hover: #484f58;
+
+      --text: #f0f6fc;
+      --text-soft: #c9d1d9;
+      --text-muted: #8b949e;
+      --text-dim: #56616c;
+
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --accent-dark: #2563eb;
+      --accent-glow: rgba(59, 130, 246, .35);
+
+      --success: #10b981;
+      --success-dark: #059669;
+
+      --danger: #ef4444;
+      --danger-dark: #dc2626;
+
+      --warning: #f59e0b;
+      --warning-dark: #d97706;
+
+      --info: #0ea5e9;
+
+      --radius-sm: 7px;
+      --radius: 10px;
+      --radius-lg: 14px;
+
+      --shadow-sm: 0 5px 15px rgba(0, 0, 0, .15);
+      --shadow: 0 15px 35px rgba(0, 0, 0, .18);
+      --shadow-lg: 0 30px 80px rgba(0, 0, 0, .65);
+
+      --ease: cubic-bezier(.2, .8, .2, 1);
+    }
+
+
+    /* =========================================================
+       2. BASE
+    ========================================================= */
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+
+      color: var(--text);
+
+      font-family:
+        "Inter",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      background:
+        radial-gradient(
+          circle at 10% 0%,
+          rgba(59, 130, 246, .075),
+          transparent 28%
+        ),
+        radial-gradient(
+          circle at 90% 100%,
+          rgba(14, 165, 233, .045),
+          transparent 26%
+        ),
+        var(--bg-deep);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    ::selection {
+      color: #fff;
+      background: rgba(59, 130, 246, .35);
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #090c10;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 20px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
+    }
+
+
+    /* =========================================================
+       3. APP
+    ========================================================= */
+
+    .app-container {
+      position: relative;
+      z-index: 1;
+
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      grid-template-rows: 72px minmax(0, 1fr);
+
+      width: min(1600px, 100%);
+      height: 100vh;
+      margin: 0 auto;
+
+      overflow: hidden;
+
+      background:
+        rgba(13, 17, 23, .94);
+
+      border-left: 1px solid rgba(48, 54, 61, .45);
+      border-right: 1px solid rgba(48, 54, 61, .45);
+    }
+
+
+    /* =========================================================
+       4. HEADER
+    ========================================================= */
+
+    header {
+      grid-column: 1 / -1;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+
+      padding: 0 25px;
+
+      background:
+        rgba(13, 17, 23, .82);
+
+      border-bottom: 1px solid var(--border);
+
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+
+      z-index: 100;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+
+      min-width: 0;
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: var(--accent);
+
+      background:
+        rgba(59, 130, 246, .08);
+
+      border: 1px solid rgba(59, 130, 246, .28);
+      border-radius: 10px;
+
+      filter:
+        drop-shadow(0 0 10px var(--accent-glow));
+
+      transition:
+        background .2s ease,
+        border-color .2s ease,
+        transform .2s ease;
+    }
+
+    .brand-icon:hover {
+      background: rgba(59, 130, 246, .13);
+      border-color: rgba(96, 165, 250, .5);
+      transform: translateY(-1px);
+    }
+
+    .brand h1 {
+      margin: 0;
+
+      color: #fff;
+
+      font-size: 1.08rem;
+      font-weight: 700;
+      letter-spacing: -.45px;
+
+      white-space: nowrap;
+    }
+
+    .brand h1 span {
+      color: var(--accent);
+    }
+
+    .brand-subtitle {
+      margin-top: 3px;
+
+      color: var(--text-muted);
+
+      font-size: .63rem;
+      font-family: "Fira Code", monospace;
+    }
+
+
+    /* =========================================================
+       5. SIDEBAR
+    ========================================================= */
+
+    aside {
+      min-height: 0;
+
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+
+      padding: 24px;
+
+      overflow-y: auto;
+
+      background: var(--surface-soft);
+
+      border-right: 1px solid var(--border);
+    }
+
+    .sidebar-section h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      margin: 0 0 12px;
+
+      color: var(--accent);
+
+      font-size: .67rem;
+      font-weight: 700;
+
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+    }
+
+    .sidebar-section h3.success {
+      color: var(--success);
+    }
+
+    .sidebar-description {
+      margin: 0;
+
+      color: var(--text-muted);
+
+      font-size: .72rem;
+      line-height: 1.55;
+    }
+
+    .sidebar-info {
+      display: flex;
+      gap: 9px;
+
+      margin-top: 12px;
+      padding: 11px;
+
+      color: #9da7b2;
+
+      background:
+        rgba(59, 130, 246, .045);
+
+      border: 1px solid rgba(59, 130, 246, .12);
+      border-radius: 8px;
+
+      font-size: .65rem;
+      line-height: 1.5;
+    }
+
+    .sidebar-info i {
+      flex: 0 0 auto;
+      margin-top: 2px;
+
+      color: var(--info);
+    }
+
+    .source-code {
+      margin: 0;
+
+      color: #8f9aa5;
+
+      font-family: "Fira Code", monospace;
+      font-size: .62rem;
+      line-height: 1.8;
+    }
+
+
+    /* =========================================================
+       6. MAIN
+    ========================================================= */
+
+    main {
+      min-width: 0;
+      min-height: 0;
+
+      padding: 25px;
+
+      overflow-y: auto;
+    }
+
+
+    /* =========================================================
+       7. STATS
+    ========================================================= */
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns:
+        repeat(6, minmax(100px, 1fr));
+
+      gap: 12px;
+
+      margin-bottom: 22px;
+    }
+
+    .stat-card {
+      position: relative;
+
+      overflow: hidden;
+
+      padding: 16px 12px;
+
+      text-align: center;
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      transition:
+        border-color .2s ease,
+        transform .2s ease,
+        box-shadow .2s ease;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .stat-card::after {
+      content: "";
+
+      position: absolute;
+
+      width: 80px;
+      height: 80px;
+
+      right: -45px;
+      bottom: -45px;
+
+      border-radius: 50%;
+
+      background: var(--accent);
+
+      filter: blur(30px);
+      opacity: .08;
+
+      pointer-events: none;
+    }
+
+    .stat-card .value {
+      display: block;
+
+      color: var(--accent);
+
+      font-size: 1.45rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-card .label {
+      display: block;
+
+      margin-top: 8px;
+
+      color: var(--text-muted);
+
+      font-size: .59rem;
+      font-weight: 600;
+
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .stat-green .value {
+      color: var(--success);
+    }
+
+    .stat-yellow .value {
+      color: var(--warning);
+    }
+
+    .stat-red .value {
+      color: var(--danger);
+    }
+
+
+    /* =========================================================
+       8. CARDS
+    ========================================================= */
+
+    .card {
+      margin-bottom: 20px;
+      padding: 20px;
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+
+      box-shadow: var(--shadow);
+
+      transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(72, 79, 88, .9);
+    }
+
+
+    /* =========================================================
+       9. HEADINGS
+    ========================================================= */
+
+    .section-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+
+      margin-bottom: 14px;
+    }
+
+    .section-heading-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .section-heading-left i {
+      color: var(--accent);
+    }
+
+    .section-heading h2 {
+      margin: 0;
+
+      color: var(--text);
+
+      font-size: .8rem;
+      font-weight: 700;
+    }
+
+    .section-heading small {
+      color: var(--text-muted);
+      font-size: .62rem;
+    }
+
+
+    /* =========================================================
+       10. TEXTAREA
+    ========================================================= */
+
+    textarea {
+      display: block;
+
+      width: 100%;
+      min-height: 270px;
+
+      padding: 17px;
+
+      resize: vertical;
+
+      outline: none;
+
+      color: #e6edf3;
+      background: #0d1117;
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      font-family:
+        "Fira Code",
+        Consolas,
+        monospace;
+
+      font-size: .76rem;
+      line-height: 1.7;
+
+      transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+    }
+
+    textarea:focus {
+      border-color: var(--accent);
+
+      box-shadow:
+        0 0 0 3px rgba(59, 130, 246, .08),
+        0 0 22px rgba(59, 130, 246, .08);
+    }
+
+    textarea::placeholder {
+      color: var(--text-dim);
+    }
+
+
+    /* =========================================================
+       11. TEXTAREA ACTIONS
+    ========================================================= */
+
+    .textarea-actions {
+      position: relative;
+
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+
+      margin-top: 18px;
+      padding-top: 15px;
+
+      border-top: 1px solid var(--border-soft);
+    }
+
+    .textarea-actions::before {
+      content: "";
+
+      position: absolute;
+
+      left: 0;
+      top: -1px;
+
+      width: 110px;
+      height: 1px;
+
+      background:
+        linear-gradient(
+          90deg,
+          var(--accent),
+          transparent
+        );
+
+      box-shadow:
+        0 0 10px rgba(59, 130, 246, .5);
+    }
+
+
+    /* =========================================================
+       12. FORMAT INFO
+    ========================================================= */
+
+    .format-info {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap: 12px;
+
+      margin: 15px 0 20px;
+    }
+
+    .format-card {
+      position: relative;
+
+      padding: 17px;
+
+      background: var(--surface-soft);
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+
+      transition:
+        border-color .2s ease,
+        transform .2s ease;
+    }
+
+    .format-card:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-1px);
+    }
+
+    .format-title {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+
+      margin-bottom: 9px;
+
+      font-size: .72rem;
+      font-weight: 800;
+    }
+
+    .format-title.ts {
+      color: var(--success);
+    }
+
+    .format-title.hls {
+      color: var(--danger);
+    }
+
+    .format-card p {
+      margin: 0;
+
+      color: #a7b0ba;
+
+      font-size: .68rem;
+      line-height: 1.65;
+    }
+
+    .format-card code {
+      color: #e6edf3;
+
+      background:
+        rgba(255, 255, 255, .055);
+
+      border:
+        1px solid rgba(255, 255, 255, .06);
+
+      border-radius: 5px;
+
+      padding: 2px 5px;
+
+      font-family: "Fira Code", monospace;
+      font-size: .62rem;
+    }
+
+    .format-tip {
+      margin-top: 11px;
+      padding: 9px 10px;
+
+      color: var(--text-muted);
+
+      background:
+        rgba(255, 255, 255, .025);
+
+      border: 1px solid rgba(255, 255, 255, .05);
+      border-radius: 7px;
+
+      font-size: .61rem;
+      line-height: 1.5;
+    }
+
+    .format-tip i {
+      margin-right: 4px;
+    }
+
+    .ts-card .format-tip i {
+      color: var(--success);
+    }
+
+    .hls-card .format-tip i {
+      color: var(--danger);
+    }
+
+
+    /* =========================================================
+       13. OPTIONS / INPUTS
+    ========================================================= */
+
+    .options {
+      display: grid;
+      grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+      gap: 12px;
+
+      margin-bottom: 3px;
+    }
+
+    .field label {
+      display: block;
+
+      margin-bottom: 7px;
+
+      color: var(--text-muted);
+
+      font-size: .63rem;
+      font-weight: 700;
+
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    .field label i {
+      margin-right: 5px;
+      color: var(--accent);
+    }
+
+    select,
+    .toolbar input {
+      width: 100%;
+
+      padding: 11px 12px;
+
+      outline: none;
+
+      color: var(--text-soft);
+      background: var(--surface-soft);
+
+      border: 1px solid var(--border);
+      border-radius: 8px;
+
+      font-size: .7rem;
+
+      transition:
+        border-color .2s ease,
+        box-shadow .2s ease;
+    }
+
+    select:focus,
+    .toolbar input:focus {
+      border-color: var(--accent);
+
+      box-shadow:
+        0 0 0 3px rgba(59, 130, 246, .06);
+    }
+
+    select option {
+      background: var(--surface-soft);
+      color: var(--text);
+    }
+
+
+    /* =========================================================
+       14. BUTTON SYSTEM
+    ========================================================= */
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+
+      min-height: 39px;
+
+      padding: 10px 15px;
+
+      color: white;
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      font-size: .69rem;
+      font-weight: 600;
+
+      transition:
+        transform .18s ease,
+        background .2s ease,
+        border-color .2s ease,
+        box-shadow .2s ease;
+    }
+
+    .btn::before {
+      content: "";
+
+      position: absolute;
+      inset: -70%;
+
+      z-index: -1;
+
+      background:
+        radial-gradient(
+          circle,
+          rgba(96, 165, 250, .5),
+          transparent 58%
+        );
+
+      opacity: 0;
+
+      transform: scale(.45);
+
+      transition:
+        opacity .25s ease,
+        transform .25s ease;
+    }
+
+    .btn:hover::before {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .btn:hover {
+      background: var(--surface-hover);
+      border-color: #59636e;
+
+      box-shadow:
+        0 0 18px rgba(59, 130, 246, .12);
+    }
+
+    .btn:active {
+      transform: scale(.96);
+    }
+
+    .btn i {
+      color: #fff;
+    }
+
+    .btn-primary {
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent),
+          var(--accent-dark)
+        );
+
+      border-color: var(--accent);
+
+      box-shadow:
+        0 0 14px rgba(59, 130, 246, .18);
+    }
+
+    .btn-primary:hover {
+      background:
+        linear-gradient(
+          135deg,
+          var(--accent-hover),
+          var(--accent-dark)
+        );
+
+      border-color: var(--accent-hover);
+
+      box-shadow:
+        0 0 24px rgba(59, 130, 246, .42);
+    }
+
+    .btn-success {
+      background:
+        linear-gradient(
+          135deg,
+          var(--success),
+          var(--success-dark)
+        );
+
+      border-color: var(--success);
+
+      box-shadow:
+        0 0 13px rgba(16, 185, 129, .15);
+    }
+
+    .btn-success:hover {
+      box-shadow:
+        0 0 23px rgba(16, 185, 129, .40);
+    }
+
+    .btn-danger {
+      background:
+        linear-gradient(
+          135deg,
+          var(--danger),
+          var(--danger-dark)
+        );
+
+      border-color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      box-shadow:
+        0 0 23px rgba(239, 68, 68, .38);
+    }
+
+    .btn-warning {
+      color: #111;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--warning),
+          var(--warning-dark)
+        );
+
+      border-color: var(--warning);
+    }
+
+    .btn-warning:hover {
+      box-shadow:
+        0 0 23px rgba(245, 158, 11, .38);
+    }
+
+    .btn.small {
+      min-height: 34px;
+      padding: 8px 10px;
+      font-size: .62rem;
+    }
+
+
+    /* =========================================================
+       15. TOOLBAR
+    ========================================================= */
+
+    .toolbar {
+      display: grid;
+
+      grid-template-columns:
+        minmax(0, 2fr)
+        minmax(130px, 1fr)
+        minmax(130px, 1fr);
+
+      gap: 9px;
+
+      margin: 20px 0 12px;
+    }
+
+    .search {
+      position: relative;
+    }
+
+    .search > i {
+      position: absolute;
+
+      left: 13px;
+      top: 50%;
+
+      z-index: 2;
+
+      color: #68737e;
+
+      transform: translateY(-50%);
+
+      pointer-events: none;
+    }
+
+    .search input {
+      padding-left: 36px;
+      padding-right: 40px;
+    }
+
+    .search-clear {
+      position: absolute;
+
+      top: 50%;
+      right: 8px;
+
+      width: 27px;
+      height: 27px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: var(--text-muted);
+      background: transparent;
+
+      border: 1px solid transparent;
+      border-radius: 6px;
+
+      cursor: pointer;
+
+      opacity: 0;
+      pointer-events: none;
+
+      transform: translateY(-50%);
+
+      transition:
+        opacity .18s ease,
+        background .18s ease,
+        color .18s ease;
+    }
+
+    .search:hover .search-clear,
+    .search:focus-within .search-clear,
+    .search-clear.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .search-clear:hover {
+      color: white;
+
+      background:
+        rgba(239, 68, 68, .12);
+
+      border-color:
+        rgba(239, 68, 68, .22);
+    }
+
+
+    /* =========================================================
+       16. TABLE
+    ========================================================= */
+
+    .table-container {
+      overflow: auto;
+
+      background: var(--surface-soft);
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    table {
+      width: 100%;
+      min-width: 950px;
+
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #11161d;
+    }
+
+    th {
+      padding: 12px;
+
+      color: var(--text-muted);
+
+      border-bottom: 1px solid var(--border);
+
+      font-size: .58rem;
+      font-weight: 700;
+
+      letter-spacing: .7px;
+      text-align: left;
+
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 11px 12px;
+
+      color: var(--text-soft);
+
+      border-bottom:
+        1px solid rgba(48, 54, 61, .55);
+
+      font-size: .67rem;
+
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      transition:
+        background .18s ease;
+    }
+
+    tbody tr:hover td {
+      background:
+        rgba(59, 130, 246, .035);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .checkbox {
+      width: 15px;
+      height: 15px;
+
+      accent-color: var(--accent);
+
+      cursor: pointer;
+    }
+
+
+    /* =========================================================
+       17. BADGES
+    ========================================================= */
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+
+      padding: 4px 8px;
+
+      border: 1px solid;
+      border-radius: 20px;
+
+      font-size: .55rem;
+      font-weight: 700;
+    }
+
+    .badge.ts {
+      color: #34d399;
+
+      background:
+        rgba(16, 185, 129, .07);
+
+      border-color:
+        rgba(16, 185, 129, .2);
+    }
+
+    .badge.hls {
+      color: #f87171;
+
+      background:
+        rgba(239, 68, 68, .07);
+
+      border-color:
+        rgba(239, 68, 68, .2);
+    }
+
+    .badge.converted {
+      color: #60a5fa;
+
+      background:
+        rgba(59, 130, 246, .07);
+
+      border-color:
+        rgba(59, 130, 246, .2);
+    }
+
+    .badge.kept {
+      color: #fbbf24;
+
+      background:
+        rgba(245, 158, 11, .07);
+
+      border-color:
+        rgba(245, 158, 11, .2);
+    }
+
+
+    /* =========================================================
+       18. TABLE FOOTER
+    ========================================================= */
+
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+
+      padding: 11px;
+
+      color: var(--text-muted);
+
+      font-size: .6rem;
+
+      border-top: 1px solid var(--border);
+    }
+
+    .table-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+
+
+    /* =========================================================
+       19. EMPTY
+    ========================================================= */
+
+    .empty {
+      padding: 45px 20px;
+
+      color: var(--text-dim);
+
+      text-align: center;
+    }
+
+    .empty i {
+      display: block;
+
+      margin-bottom: 11px;
+
+      color: #303943;
+
+      font-size: 26px;
+    }
+
+    .empty div {
+      font-size: .68rem;
+    }
+
+
+    /* =========================================================
+       20. RESULT ACTIONS
+    ========================================================= */
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+
+      margin-top: 16px;
+    }
+
+
+    /* =========================================================
+       21. NOTICE
+    ========================================================= */
+
+    .notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+
+      margin-top: 16px;
+      padding: 12px 14px;
+
+      color: var(--text-muted);
+
+      background:
+        rgba(59, 130, 246, .035);
+
+      border:
+        1px solid rgba(59, 130, 246, .12);
+
+      border-radius: 8px;
+
+      font-size: .61rem;
+      line-height: 1.6;
+    }
+
+    .notice i {
+      margin-top: 2px;
+      color: var(--accent);
+    }
+
+
+    /* =========================================================
+       22. MODAL
+    ========================================================= */
+
+    .modal {
+      position: fixed;
+      inset: 0;
+
+      z-index: 500;
+
+      display: none;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      background:
+        rgba(0, 0, 0, .72);
+
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .modal.show {
+      display: flex;
+    }
+
+    .modal-box {
+      width: min(1050px, 100%);
+      max-height: 90vh;
+
+      display: flex;
+      flex-direction: column;
+
+      overflow: hidden;
+
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 14px 17px;
+
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      color: var(--accent);
+
+      font-size: .72rem;
+      font-weight: 700;
+
+      text-transform: uppercase;
+    }
+
+    .close {
+      width: 32px;
+      height: 32px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      color: var(--text);
+
+      background:
+        rgba(239, 68, 68, .08);
+
+      border:
+        1px solid rgba(239, 68, 68, .15);
+
+      border-radius: 7px;
+
+      cursor: pointer;
+
+      transition:
+        background .2s ease,
+        border-color .2s ease;
+    }
+
+    .close:hover {
+      background:
+        rgba(239, 68, 68, .18);
+
+      border-color: var(--danger);
+    }
+
+    .txt-viewer {
+      min-height: 430px;
+
+      margin: 15px;
+      padding: 15px;
+
+      overflow: auto;
+
+      color: #6ee7b7;
+
+      background: #090c10;
+
+      border: 1px solid var(--border);
+      border-radius: 9px;
+
+      font-family:
+        "Fira Code",
+        Consolas,
+        monospace;
+
+      font-size: .68rem;
+      line-height: 1.7;
+
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .modal-footer {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      padding: 13px 15px;
+
+      border-top: 1px solid var(--border);
+    }
+
+
+    /* =========================================================
+       23. TOAST
+    ========================================================= */
+
+    .toast {
+      position: fixed;
+
+      top: 20px;
+      right: 20px;
+
+      z-index: 1000;
+
+      max-width: 360px;
+
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      padding: 13px 18px;
+
+      color: white;
+      background: var(--surface);
+
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--accent);
+      border-radius: 8px;
+
+      box-shadow:
+        0 15px 40px rgba(0, 0, 0, .6);
+
+      font-size: .68rem;
+
+      opacity: 0;
+
+      transform: translateX(110%);
+
+      pointer-events: none;
+
+      transition:
+        opacity .3s ease,
+        transform .3s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+
+
+    /* =========================================================
+       24. FOOTER
+    ========================================================= */
+
+    .footer {
+      padding: 13px 0 3px;
+
+      color: var(--text-dim);
+
+      font-size: .58rem;
+
+      text-align: center;
+    }
+
+    .footer i {
+      margin-right: 4px;
+      color: var(--accent);
+    }
+
+    .footer span {
+      margin: 0 5px;
+      color: #303943;
+    }
+
+
+    /* =========================================================
+       25. RESPONSIVE
+    ========================================================= */
+
+    @media (max-width: 1100px) {
+      .app-container {
+        grid-template-columns:
+          230px minmax(0, 1fr);
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(3, 1fr);
+      }
+    }
+
+    @media (max-width: 800px) {
+      .app-container {
+        display: block;
+
+        height: auto;
+        min-height: 100vh;
+
+        overflow: visible;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+
+        min-height: 68px;
+      }
+
+      aside {
+        display: none;
+      }
+
+      main {
+        padding: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 0 15px;
+      }
+
+      .brand-subtitle {
+        display: none;
+      }
+
+      .brand h1 {
+        font-size: .92rem;
+      }
+
+      .format-info,
+      .options {
+        grid-template-columns: 1fr;
+      }
+
+      .stats-grid {
+        grid-template-columns:
+          repeat(2, 1fr);
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .textarea-actions {
+        flex-direction: column;
+      }
+
+      .textarea-actions .btn {
+        width: 100%;
+      }
+
+      .result-actions {
+        display: grid;
+
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+      .table-footer {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .table-buttons {
+        display: grid;
+
+        grid-template-columns:
+          1fr 1fr;
+      }
+
+      .table-buttons .btn {
+        width: 100%;
+      }
+
+      .notice {
+        font-size: .58rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-container">
+
+    <!-- HEADER -->
+    <header>
+      <div class="brand">
+        <div class="brand-icon">
+          <i class="fa-solid fa-link"></i>
+        </div>
+
+        <div>
+          <h1>
+            IPTV <span>Adapter Conversion</span>
+          </h1>
+
+          <div class="brand-subtitle">
+            Local Processing Engine
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" id="processBtn" type="button">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+        Procesar lote
+      </button>
+    </header>
+
+
+    <!-- SIDEBAR -->
+    <aside>
+
+      <div class="sidebar-section">
+        <h3>
+          <i class="fa-solid fa-microchip"></i>
+          Procesamiento
+        </h3>
+
+        <p class="sidebar-description">
+          Normalización y adaptación local de enlaces IPTV directamente dentro del navegador.
+        </p>
+
+        <div class="sidebar-info">
+          <i class="fa-solid fa-shield-halved"></i>
+
+          <span>
+            El procesamiento de esta interfaz se realiza localmente.
+            No se validan credenciales ni se comprueba la disponibilidad de servidores.
+          </span>
+        </div>
+      </div>
+
+
+      <div class="sidebar-section">
+        <h3 class="success">
+          <i class="fa-solid fa-code-branch"></i>
+          Generación
+        </h3>
+
+        <p class="sidebar-description">
+          Selecciona desde el panel principal si deseas generar TS,
+          HLS o ambas variantes.
+        </p>
+      </div>
+
+
+      <div class="sidebar-section">
+        <h3>
+          <i class="fa-solid fa-terminal"></i>
+          Formatos
+        </h3>
+
+        <p class="sidebar-description">
+          TS y HLS se generan como parámetros de salida en la URL resultante.
+        </p>
+      </div>
+
+
+      <div class="sidebar-section">
+        <h3>
+          <i class="fa-solid fa-code"></i>
+          Local Engine
+        </h3>
+
+        <p class="source-code">
+          Procesamiento completamente local.<br>
+          Sin API externa.<br>
+          Sin validación remota.<br>
+          Compatible con HTTP / HTTPS.
+        </p>
+      </div>
+
+    </aside>
+
+
+    <!-- MAIN -->
+    <main>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+
+        <div class="stat-card">
+          <span class="value" id="statDetected">0</span>
+          <span class="label">Detectadas</span>
+        </div>
+
+        <div class="stat-card stat-green">
+          <span class="value" id="statResults">0</span>
+          <span class="label">Resultados</span>
+        </div>
+
+        <div class="stat-card stat-yellow">
+          <span class="value" id="statIgnored">0</span>
+          <span class="label">Ignoradas</span>
+        </div>
+
+        <div class="stat-card stat-red">
+          <span class="value" id="statInvalid">0</span>
+          <span class="label">Inválidas</span>
+        </div>
+
+        <div class="stat-card stat-yellow">
+          <span class="value" id="statDuplicates">0</span>
+          <span class="label">Duplicadas</span>
+        </div>
+
+        <div class="stat-card">
+          <span class="value" id="statVisible">0</span>
+          <span class="label">Visibles</span>
+        </div>
+
+      </div>
+
+
+      <!-- INPUT -->
+      <div class="card">
+
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <i class="fa-solid fa-file-import"></i>
+            <h2>ENTRADA / LOTE</h2>
+          </div>
+
+          <small>
+            Procesamiento local
+          </small>
+        </div>
+
+
+        <textarea
+          id="input"
+          spellcheck="false"
+          autocomplete="off"
+          placeholder="Pega tu lote aquí...
+
+Acepta enlaces como:
+player_api.php?...username=...&password=...
+get.php?...username=...&password=...
+
+También acepta:
+http://
+https://
+dominio:puerto/
+
+La herramienta limpia automáticamente
+fechas, etiquetas, nombres de grupos,
+stickers y texto adicional."
+        ></textarea>
+
+
+        <div class="actions textarea-actions">
+
+          <button class="btn" id="clearBtn" type="button">
+            <i class="fa-solid fa-trash"></i>
+            Limpiar
+          </button>
+
+          <button
+            class="btn btn-primary"
+            id="processBtnBottom"
+            type="button"
+          >
+            <i class="fa-solid fa-bolt"></i>
+            Procesar lote
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- FORMAT INFO -->
+      <div class="format-info">
+
+        <div class="format-card ts-card">
+
+          <div class="format-title ts">
+            <i class="fa-solid fa-bolt"></i>
+            TS
+          </div>
+
+          <p>
+            <strong>TS</strong> es una variante pensada para una
+            reproducción directa y sencilla. Normalmente se utiliza
+            cuando se busca una transmisión continua y con poca
+            complejidad en el formato de salida.
+            La herramienta genera:
+            <code>output=ts</code>
+          </p>
+
+          <div class="format-tip">
+            <i class="fa-solid fa-circle-check"></i>
+            <strong>TS:</strong>
+            salida directa para reproducción continua.
+          </div>
+
+        </div>
+
+
+        <div class="format-card hls-card">
+
+          <div class="format-title hls">
+            <i class="fa-solid fa-wave-square"></i>
+            HLS
+          </div>
+
+          <p>
+            <strong>HLS</strong> divide la transmisión en pequeños
+            segmentos que el reproductor puede solicitar
+            progresivamente. Es una alternativa habitual cuando
+            se necesita una reproducción adaptable a diferentes
+            condiciones de red.
+            La herramienta genera:
+            <code>output=hls</code>
+          </p>
+
+          <div class="format-tip">
+            <i class="fa-solid fa-circle-check"></i>
+            <strong>HLS:</strong>
+            reproducción segmentada y adaptable.
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- CONFIGURATION -->
+      <div class="card">
+
+        <div class="section-heading">
+          <div class="section-heading-left">
+            <i class="fa-solid fa-sliders"></i>
+            <h2>CONFIGURACIÓN</h2>
+          </div>
+        </div>
+
+
+        <div class="options">
+
+          <div class="field">
+            <label for="protocol">
+              <i class="fa-solid fa-globe"></i>
+              Protocolo
+            </label>
+
+            <select id="protocol">
+              <option value="http">HTTP</option>
+              <option value="https">HTTPS</option>
+            </select>
+          </div>
+
+
+          <div class="field">
+            <label for="generation">
+              <i class="fa-solid fa-code-branch"></i>
+              Generación
+            </label>
+
+            <select id="generation">
+              <option value="both">TS + HLS</option>
+              <option value="ts">Solo TS</option>
+              <option value="hls">Solo HLS</option>
+            </select>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- FILTER -->
+      <div class="toolbar">
+
+        <div class="search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+
+          <input
+            id="search"
+            type="search"
+            autocomplete="off"
+            placeholder="Buscar servidor, usuario o contraseña..."
+            aria-label="Buscar resultados"
+          >
+
+          <button
+            id="clearSearchBtn"
+            class="search-clear"
+            type="button"
+            title="Limpiar búsqueda"
+            aria-label="Limpiar búsqueda"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+
+        <select
+          id="filterFormat"
+          aria-label="Filtrar por formato"
+        >
+          <option value="all">Todos los formatos</option>
+          <option value="TS">TS</option>
+          <option value="HLS">HLS</option>
+        </select>
+
+
+        <select
+          id="filterStatus"
+          aria-label="Filtrar por estado"
+        >
+          <option value="all">Todos los estados</option>
+          <option value="converted">Convertidos</option>
+          <option value="kept">Ya convertidos</option>
+        </select>
+
+      </div>
+
+
+      <!-- TABLE -->
+      <div class="table-container">
+
+        <table>
+
+          <thead>
+            <tr>
+
+              <th style="width:35px">
+                <input
+                  id="selectAll"
+                  class="checkbox"
+                  type="checkbox"
+                  aria-label="Seleccionar resultados visibles"
+                >
+              </th>
+
+              <th>#</th>
+              <th>SERVIDOR</th>
+              <th>USUARIO</th>
+              <th>CONTRASEÑA</th>
+              <th>FORMATO</th>
+              <th>ESTADO</th>
+              <th>ACCIÓN</th>
+
+            </tr>
+          </thead>
+
+          <tbody id="tableBody"></tbody>
+
+        </table>
+
+
+        <div class="table-footer">
+
+          <span id="tableInfo">
+            0 resultados
+          </span>
+
+          <div class="table-buttons">
+
+            <button
+              class="btn btn-success small"
+              id="copySelectedBtn"
+              type="button"
+            >
+              <i class="fa-solid fa-copy"></i>
+              Copiar selección
+            </button>
+
+            <button
+              class="btn small"
+              id="selectAllBtn"
+              type="button"
+            >
+              <i class="fa-solid fa-check-double"></i>
+              Seleccionar todo
+            </button>
+
+            <button
+              class="btn btn-danger small"
+              id="deleteSelectedBtn"
+              type="button"
+            >
+              <i class="fa-solid fa-trash-can"></i>
+              Eliminar selección
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- RESULT ACTIONS -->
+      <div class="result-actions">
+
+        <button
+          class="btn small"
+          id="viewTxtBtn"
+          type="button"
+        >
+          <i class="fa-solid fa-file-lines"></i>
+          Ver TXT
+        </button>
+
+        <button
+          class="btn btn-success small"
+          id="copyAllBtn"
+          type="button"
+        >
+          <i class="fa-solid fa-copy"></i>
+          Copiar todo
+        </button>
+
+        <button
+          class="btn btn-warning small"
+          id="downloadBtn"
+          type="button"
+        >
+          <i class="fa-solid fa-download"></i>
+          Descargar TXT
+        </button>
+
+        <button
+          class="btn btn-danger small"
+          id="emptyTableBtn"
+          type="button"
+        >
+          <i class="fa-solid fa-broom"></i>
+          Vaciar resultados
+        </button>
+
+      </div>
+
+
+      <!-- NOTICE -->
+      <div class="notice">
+
+        <i class="fa-solid fa-shield-halved"></i>
+
+        <div>
+          <strong>Procesamiento local:</strong>
+          esta aplicación únicamente analiza y transforma el texto
+          introducido en el navegador. No realiza comprobaciones
+          de cuentas, disponibilidad, autenticación ni solicitudes
+          a servidores IPTV.
+        </div>
+
+      </div>
+
+
+      <!-- FOOTER -->
+      <div class="footer">
+
+        <i class="fa-solid fa-bolt"></i>
+
+        IPTV Adapter Conversion
+
+        <span>·</span>
+
+        Local Processing
+
+        <span>·</span>
+
+        MIT License
+
+        <span>·</span>
+
+        Developed by dZh0ni
+
+      </div>
+
+    </main>
+
+  </div>
+
+
+  <!-- MODAL -->
+  <div
+    class="modal"
+    id="txtModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="txtModalTitle"
+  >
+
+    <div class="modal-box">
+
+      <div class="modal-header">
+
+        <div class="modal-title" id="txtModalTitle">
+          <i class="fa-solid fa-file-lines"></i>
+          Resultados TXT
+        </div>
+
+        <button
+          class="close"
+          id="closeModal"
+          type="button"
+          aria-label="Cerrar"
+        >
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+      </div>
+
+
+      <pre
+        class="txt-viewer"
+        id="txtViewer"
+      ></pre>
+
+
+      <div class="modal-footer">
+
+        <button
+          class="btn btn-success small"
+          id="copyViewerBtn"
+          type="button"
+        >
+          <i class="fa-solid fa-copy"></i>
+          Copiar
+        </button>
+
+        <button
+          class="btn btn-warning small"
+          id="downloadViewerBtn"
+          type="button"
+        >
+          <i class="fa-solid fa-download"></i>
+          Descargar
+        </button>
+
+        <button
+          class="btn btn-danger small"
+          id="closeModalBtn"
+          type="button"
+        >
+          <i class="fa-solid fa-xmark"></i>
+          Cerrar
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- TOAST -->
+  <div
+    class="toast"
+    id="toast"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+
+  <script>
+    "use strict";
+
+    /* =========================================================
+       STATE
+    ========================================================= */
+
+    let records = [];
+    let cleanLines = [];
+    let ignoredCount = 0;
+    let invalidCount = 0;
+    let duplicateCount = 0;
+    let nextId = 1;
+
+
+    /* =========================================================
+       DOM
+    ========================================================= */
+
+    const $ = id => document.getElementById(id);
+
+    const input = $("input");
+    const protocol = $("protocol");
+    const generation = $("generation");
+    const tableBody = $("tableBody");
+    const search = $("search");
+    const clearSearchBtn = $("clearSearchBtn");
+    const filterFormat = $("filterFormat");
+    const filterStatus = $("filterStatus");
+    const selectAll = $("selectAll");
+    const txtModal = $("txtModal");
+    const txtViewer = $("txtViewer");
+    const toast = $("toast");
+
+
+    /* =========================================================
+       TOAST
+    ========================================================= */
+
+    function showToast(message, error = false) {
+      toast.textContent = message;
+
+      toast.classList.toggle(
+        "error",
+        error
+      );
+
+      toast.classList.add("show");
+
+      clearTimeout(showToast.timer);
+
+      showToast.timer = setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2600);
+    }
+
+
+    /* =========================================================
+       HTML ESCAPE
+    ========================================================= */
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+
+    /* =========================================================
+       NORMALIZE URL
+    ========================================================= */
+
+    function normalizeURLCandidate(value) {
+      let url = String(value || "").trim();
+
+      if (!url) {
+        return null;
+      }
+
+      url = url.replace(
+        /^[("'`<\[]+/,
+        ""
+      );
+
+      url = url.replace(
+        /[)\]}'"`>,.;!?]+$/g,
+        ""
+      );
+
+      if (!url) {
+        return null;
+      }
+
+      if (!/^https?:\/\//i.test(url)) {
+        url = "http://" + url;
+      }
+
+      try {
+        const parsed = new URL(url);
+
+        if (!/^https?:$/.test(parsed.protocol)) {
+          return null;
+        }
+
+        if (!parsed.hostname) {
+          return null;
+        }
+
+        return parsed.toString();
+
+      } catch {
+        return null;
+      }
+    }
+
+
+    /* =========================================================
+       EXTRACT URL
+    ========================================================= */
+
+    function extractURLFromLine(raw) {
+      let line = String(raw || "").trim();
+
+      if (!line) {
+        return null;
+      }
+
+      line = line.replace(
+        /^\s*\[[^\]]+\]\s*[^:]+:\s*/i,
+        ""
+      );
+
+      if (
+        /^\s*\[.*?sticker.*?\]\s*$/i.test(line)
+      ) {
+        ignoredCount++;
+        return null;
+      }
+
+      const explicit = line.match(
+        /https?:\/\/[^\s<>"'`]+/i
+      );
+
+      if (explicit) {
+        const normalized =
+          normalizeURLCandidate(explicit[0]);
+
+        if (normalized) {
+          return normalized;
+        }
+      }
+
+      const domainCandidate = line.match(
+        /(?:[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?|\d{1,3}(?:\.\d{1,3}){3})(?::\d{1,5})?(?:\/[^\s<>"'`]+)?/i
+      );
+
+      if (domainCandidate) {
+        const normalized =
+          normalizeURLCandidate(
+            domainCandidate[0]
+          );
+
+        if (normalized) {
+          return normalized;
+        }
+      }
+
+      invalidCount++;
+
+      return null;
+    }
+
+
+    /* =========================================================
+       CLEAN BATCH
+    ========================================================= */
+
+    function cleanBatch(text) {
+      const lines =
+        String(text || "")
+          .split(/\r?\n/);
+
+      const result = [];
+      const seen = new Set();
+
+      ignoredCount = 0;
+      invalidCount = 0;
+      duplicateCount = 0;
+
+      for (const raw of lines) {
+
+        const url =
+          extractURLFromLine(raw);
+
+        if (!url) {
+          continue;
+        }
+
+        const key =
+          url.toLowerCase();
+
+        if (seen.has(key)) {
+          duplicateCount++;
+          continue;
+        }
+
+        seen.add(key);
+        result.push(url);
+      }
+
+      cleanLines = result;
+
+      input.value =
+        result.join("\n");
+
+      return result;
+    }
+
+
+    /* =========================================================
+       PARSE URL
+    ========================================================= */
+
+    function parseURL(source) {
+      try {
+
+        const url = new URL(source);
+
+        const username =
+          url.searchParams.get("username");
+
+        const password =
+          url.searchParams.get("password");
+
+        if (
+          username === null ||
+          password === null
+        ) {
+          return null;
+        }
+
+        const pathname =
+          url.pathname
+            .toLowerCase()
+            .replace(/\/+$/, "");
+
+        return {
+          source,
+          host: url.host,
+          hostname: url.hostname,
+          username,
+          password,
+          pathname,
+          isGet: pathname.endsWith("/get.php"),
+          isPlayerAPI:
+            pathname.endsWith("/player_api.php"),
+          originalProtocol:
+            url.protocol.replace(":", ""),
+          originalOutput:
+            url.searchParams.get("output")
+        };
+
+      } catch {
+        return null;
+      }
+    }
+
+
+    /* =========================================================
+       BUILD RESULT URL
+    ========================================================= */
+
+    function buildURL(data, format) {
+      const selectedProtocol =
+        protocol.value === "https"
+          ? "https"
+          : "http";
+
+      const url =
+        new URL(
+          `${selectedProtocol}://${data.host}`
+        );
+
+      url.pathname = "/get.php";
+      url.search = "";
+
+      url.searchParams.set(
+        "username",
+        data.username
+      );
+
+      url.searchParams.set(
+        "password",
+        data.password
+      );
+
+      url.searchParams.set(
+        "type",
+        "m3u_plus"
+      );
+
+      url.searchParams.set(
+        "output",
+        format.toLowerCase()
+      );
+
+      return url.toString();
+    }
+
+
+    /* =========================================================
+       FORMATS
+    ========================================================= */
+
+    function getFormats() {
+
+      switch (generation.value) {
+
+        case "ts":
+          return ["TS"];
+
+        case "hls":
+          return ["HLS"];
+
+        default:
+          return ["TS", "HLS"];
+      }
+    }
+
+
+    /* =========================================================
+       GENERATE RESULTS
+    ========================================================= */
+
+    function generateResults(cleanURLs) {
+
+      records = [];
+
+      const outputSeen = new Set();
+      const formats = getFormats();
+
+      for (const source of cleanURLs) {
+
+        const data =
+          parseURL(source);
+
+        if (!data) {
+          invalidCount++;
+          continue;
+        }
+
+        const originalOutput =
+          String(
+            data.originalOutput || ""
+          ).toLowerCase();
+
+        if (
+          data.isGet &&
+          (
+            originalOutput === "ts" ||
+            originalOutput === "hls"
+          )
+        ) {
+
+          const keptFormat =
+            originalOutput.toUpperCase();
+
+          if (formats.includes(keptFormat)) {
+
+            const key =
+              source.toLowerCase();
+
+            if (!outputSeen.has(key)) {
+
+              outputSeen.add(key);
+
+              records.push({
+                id: nextId++,
+                source,
+                host: data.host,
+                username: data.username,
+                password: data.password,
+                format: keptFormat,
+                status: "kept",
+                url: source,
+                selected: false
+              });
+            }
+
+            continue;
+          }
+        }
+
+
+        for (const format of formats) {
+
+          const resultURL =
+            buildURL(
+              data,
+              format
+            );
+
+          const key =
+            resultURL.toLowerCase();
+
+          if (outputSeen.has(key)) {
+            duplicateCount++;
+            continue;
+          }
+
+          outputSeen.add(key);
+
+          records.push({
+            id: nextId++,
+            source,
+            host: data.host,
+            username: data.username,
+            password: data.password,
+            format,
+            status: "converted",
+            url: resultURL,
+            selected: false
+          });
+        }
+      }
+    }
+
+
+    /* =========================================================
+       PROCESS
+    ========================================================= */
+
+    function processBatch() {
+
+      const text =
+        input.value.trim();
+
+      if (!text) {
+
+        records = [];
+        cleanLines = [];
+
+        ignoredCount = 0;
+        invalidCount = 0;
+        duplicateCount = 0;
+
+        updateStats(0);
+        renderTable();
+
+        showToast(
+          "Pega un lote antes de procesar.",
+          true
+        );
+
+        return;
+      }
+
+      const cleaned =
+        cleanBatch(text);
+
+      generateResults(cleaned);
+
+      updateStats(cleaned.length);
+      renderTable();
+
+      showToast(
+        `${cleaned.length} URL(s) detectadas · ${records.length} resultado(s).`
+      );
+    }
+
+
+    /* =========================================================
+       FILTERED RECORDS
+    ========================================================= */
+
+    function getFilteredRecords() {
+
+      const query =
+        search.value
+          .trim()
+          .toLowerCase();
+
+      const format =
+        filterFormat.value;
+
+      const status =
+        filterStatus.value;
+
+      return records.filter(record => {
+
+        const searchable = [
+          record.host,
+          record.username,
+          record.password,
+          record.format,
+          record.status,
+          record.url
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        const matchesSearch =
+          !query ||
+          searchable.includes(query);
+
+        const matchesFormat =
+          format === "all" ||
+          record.format === format;
+
+        const matchesStatus =
+          status === "all" ||
+          record.status === status;
+
+        return (
+          matchesSearch &&
+          matchesFormat &&
+          matchesStatus
+        );
+      });
+    }
+
+
+    /* =========================================================
+       EMPTY
+    ========================================================= */
+
+    function renderEmpty(message) {
+
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="8">
+            <div class="empty">
+              <i class="fa-solid fa-table-list"></i>
+              <div>${escapeHTML(message)}</div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }
+
+
+    /* =========================================================
+       RENDER TABLE
+    ========================================================= */
+
+    function renderTable() {
+
+      const filtered =
+        getFilteredRecords();
+
+      tableBody.innerHTML = "";
+
+      if (!filtered.length) {
+
+        renderEmpty(
+          records.length
+            ? "No hay resultados visibles."
+            : "No hay resultados. Procesa un lote para comenzar."
+        );
+
+      } else {
+
+        filtered.forEach(
+          (record, index) => {
+
+            const tr =
+              document.createElement("tr");
+
+            const converted =
+              record.status === "converted";
+
+            const statusText =
+              converted
+                ? "Convertido"
+                : "Ya convertido";
+
+            const statusIcon =
+              converted
+                ? "fa-wand-magic-sparkles"
+                : "fa-circle-check";
+
+            tr.innerHTML = `
+              <td>
+                <input
+                  class="checkbox record-check"
+                  type="checkbox"
+                  data-id="${record.id}"
+                  ${record.selected ? "checked" : ""}
+                  aria-label="Seleccionar resultado ${index + 1}"
+                >
+              </td>
+
+              <td>
+                ${index + 1}
+              </td>
+
+              <td>
+                ${escapeHTML(record.host)}
+              </td>
+
+              <td>
+                ${escapeHTML(record.username)}
+              </td>
+
+              <td>
+                ${escapeHTML(record.password)}
+              </td>
+
+              <td>
+                <span class="badge ${record.format.toLowerCase()}">
+                  <i class="fa-solid ${
+                    record.format === "TS"
+                      ? "fa-file-video"
+                      : "fa-wave-square"
+                  }"></i>
+
+                  ${record.format}
+                </span>
+              </td>
+
+              <td>
+                <span class="badge ${record.status}">
+                  <i class="fa-solid ${statusIcon}"></i>
+
+                  ${statusText}
+                </span>
+              </td>
+
+              <td>
+                <button
+                  class="btn btn-primary small copy-one"
+                  type="button"
+                  data-id="${record.id}"
+                  title="Copiar URL"
+                  aria-label="Copiar URL"
+                >
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+              </td>
+            `;
+
+            tableBody.appendChild(tr);
+          }
+        );
+      }
+
+
+      document
+        .querySelectorAll(".record-check")
+        .forEach(checkbox => {
+
+          checkbox.addEventListener(
+            "change",
+            () => {
+
+              const id =
+                Number(
+                  checkbox.dataset.id
+                );
+
+              const record =
+                records.find(
+                  item => item.id === id
+                );
+
+              if (record) {
+                record.selected =
+                  checkbox.checked;
+              }
+
+              updateSelectAll();
+            }
+          );
+        });
+
+
+      document
+        .querySelectorAll(".copy-one")
+        .forEach(button => {
+
+          button.addEventListener(
+            "click",
+            () => {
+              copyRecord(
+                Number(button.dataset.id)
+              );
+            }
+          );
+        });
+
+
+      updateStats();
+      updateSelectAll();
+    }
+
+
+    /* =========================================================
+       STATS
+    ========================================================= */
+
+    function updateStats(detected = null) {
+
+      if (detected !== null) {
+        $("statDetected")
+          .textContent = detected;
+      }
+
+      $("statResults")
+        .textContent = records.length;
+
+      $("statIgnored")
+        .textContent = ignoredCount;
+
+      $("statInvalid")
+        .textContent = invalidCount;
+
+      $("statDuplicates")
+        .textContent = duplicateCount;
+
+      const visible =
+        getFilteredRecords().length;
+
+      $("statVisible")
+        .textContent = visible;
+
+      $("tableInfo")
+        .textContent =
+          `${visible} visibles · ${records.length} totales`;
+    }
+
+
+    /* =========================================================
+       SELECT ALL STATE
+    ========================================================= */
+
+    function updateSelectAll() {
+
+      const filtered =
+        getFilteredRecords();
+
+      if (!filtered.length) {
+
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+
+        return;
+      }
+
+      const selected =
+        filtered.filter(
+          record => record.selected
+        ).length;
+
+      selectAll.checked =
+        selected === filtered.length;
+
+      selectAll.indeterminate =
+        selected > 0 &&
+        selected < filtered.length;
+    }
+
+
+    /* =========================================================
+       SELECT ALL CHECKBOX
+    ========================================================= */
+
+    selectAll.addEventListener(
+      "change",
+      () => {
+
+        const filtered =
+          getFilteredRecords();
+
+        filtered.forEach(record => {
+          record.selected =
+            selectAll.checked;
+        });
+
+        renderTable();
+      }
+    );
+
+
+    /* =========================================================
+       SELECT ALL BUTTON
+    ========================================================= */
+
+    $("selectAllBtn")
+      .addEventListener(
+        "click",
+        () => {
+
+          const filtered =
+            getFilteredRecords();
+
+          if (!filtered.length) {
+
+            showToast(
+              "No hay resultados visibles.",
+              true
+            );
+
+            return;
+          }
+
+          const allSelected =
+            filtered.every(
+              record => record.selected
+            );
+
+          filtered.forEach(record => {
+            record.selected =
+              !allSelected;
+          });
+
+          renderTable();
+
+          showToast(
+            allSelected
+              ? `${filtered.length} resultado(s) deseleccionado(s).`
+              : `${filtered.length} resultado(s) seleccionado(s).`
+          );
+        }
+      );
+
+
+    /* =========================================================
+       SEARCH
+    ========================================================= */
+
+    function updateSearchClearButton() {
+
+      clearSearchBtn.classList.toggle(
+        "visible",
+        search.value.length > 0
+      );
+    }
+
+
+    clearSearchBtn.addEventListener(
+      "click",
+      () => {
+
+        search.value = "";
+
+        updateSearchClearButton();
+
+        renderTable();
+
+        search.focus();
+      }
+    );
+
+
+    /* =========================================================
+       COPY
+    ========================================================= */
+
+    async function copyText(text) {
+
+      if (!text) {
+        return false;
+      }
+
+      try {
+
+        if (
+          navigator.clipboard &&
+          window.isSecureContext
+        ) {
+
+          await navigator.clipboard.writeText(
+            text
+          );
+
+          return true;
+        }
+
+      } catch {}
+
+
+      const area =
+        document.createElement("textarea");
+
+      area.value = text;
+
+      area.setAttribute(
+        "readonly",
+        ""
+      );
+
+      area.style.position = "fixed";
+      area.style.left = "-9999px";
+      area.style.top = "0";
+
+      document.body.appendChild(area);
+
+      area.focus();
+      area.select();
+
+      let success = false;
+
+      try {
+        success =
+          document.execCommand("copy");
+      } catch {
+        success = false;
+      }
+
+      area.remove();
+
+      return success;
+    }
+
+
+    /* =========================================================
+       COPY RECORD
+    ========================================================= */
+
+    async function copyRecord(id) {
+
+      const record =
+        records.find(
+          item => item.id === id
+        );
+
+      if (!record) {
+
+        showToast(
+          "Resultado no encontrado.",
+          true
+        );
+
+        return;
+      }
+
+      const success =
+        await copyText(record.url);
+
+      showToast(
+        success
+          ? "URL copiada correctamente."
+          : "No se pudo copiar la URL.",
+        !success
+      );
+    }
+
+
+    /* =========================================================
+       SELECTED TEXT
+    ========================================================= */
+
+    function getSelectedText() {
+
+      return records
+        .filter(
+          record => record.selected
+        )
+        .map(
+          record => record.url
+        )
+        .join("\n");
+    }
+
+
+    /* =========================================================
+       ALL TEXT
+    ========================================================= */
+
+    function getAllText() {
+
+      return records
+        .map(
+          record => record.url
+        )
+        .join("\n");
+    }
+
+
+    /* =========================================================
+       COPY SELECTED
+    ========================================================= */
+
+    $("copySelectedBtn")
+      .addEventListener(
+        "click",
+        async () => {
+
+          const selected =
+            records.filter(
+              record => record.selected
+            );
+
+          if (!selected.length) {
+
+            showToast(
+              "No hay resultados seleccionados.",
+              true
+            );
+
+            return;
+          }
+
+          const success =
+            await copyText(
+              getSelectedText()
+            );
+
+          showToast(
+            success
+              ? `${selected.length} resultado(s) copiado(s).`
+              : "No se pudo copiar la selección.",
+            !success
+          );
+        }
+      );
+
+
+    /* =========================================================
+       COPY ALL
+    ========================================================= */
+
+    $("copyAllBtn")
+      .addEventListener(
+        "click",
+        async () => {
+
+          if (!records.length) {
+
+            showToast(
+              "No hay resultados.",
+              true
+            );
+
+            return;
+          }
+
+          const success =
+            await copyText(
+              getAllText()
+            );
+
+          showToast(
+            success
+              ? `${records.length} resultado(s) copiado(s).`
+              : "No se pudo copiar.",
+            !success
+          );
+        }
+      );
+
+
+    /* =========================================================
+       DELETE SELECTED
+    ========================================================= */
+
+    $("deleteSelectedBtn")
+      .addEventListener(
+        "click",
+        () => {
+
+          const selectedCount =
+            records.filter(
+              record => record.selected
+            ).length;
+
+          if (!selectedCount) {
+
+            showToast(
+              "No hay resultados seleccionados.",
+              true
+            );
+
+            return;
+          }
+
+          const confirmed =
+            window.confirm(
+              `¿Eliminar ${selectedCount} resultado(s) seleccionado(s)?`
+            );
+
+          if (!confirmed) {
+            return;
+          }
+
+          records =
+            records.filter(
+              record => !record.selected
+            );
+
+          renderTable();
+
+          showToast(
+            `${selectedCount} resultado(s) eliminado(s).`
+          );
+        }
+      );
+
+
+    /* =========================================================
+       TXT MODAL
+    ========================================================= */
+
+    function openTXT() {
+
+      txtViewer.textContent =
+        getAllText() ||
+        "No hay resultados.";
+
+      txtModal.classList.add("show");
+
+      document.body.style.overflow =
+        "hidden";
+    }
+
+
+    function closeTXT() {
+
+      txtModal.classList.remove("show");
+
+      document.body.style.overflow =
+        "";
+    }
+
+
+    $("viewTxtBtn")
+      .addEventListener(
+        "click",
+        openTXT
+      );
+
+    $("closeModal")
+      .addEventListener(
+        "click",
+        closeTXT
+      );
+
+    $("closeModalBtn")
+      .addEventListener(
+        "click",
+        closeTXT
+      );
+
+
+    txtModal.addEventListener(
+      "click",
+      event => {
+
+        if (
+          event.target === txtModal
+        ) {
+          closeTXT();
+        }
+      }
+    );
+
+
+    /* =========================================================
+       COPY VIEWER
+    ========================================================= */
+
+    $("copyViewerBtn")
+      .addEventListener(
+        "click",
+        async () => {
+
+          const success =
+            await copyText(
+              txtViewer.textContent
+            );
+
+          showToast(
+            success
+              ? "TXT copiado correctamente."
+              : "No se pudo copiar el TXT.",
+            !success
+          );
+        }
+      );
+
+
+    /* =========================================================
+       DOWNLOAD TXT
+    ========================================================= */
+
+    function downloadTXT() {
+
+      const content =
+        getAllText();
+
+      if (!content) {
+
+        showToast(
+          "No hay resultados para descargar.",
+          true
+        );
+
+        return;
+      }
+
+      const blob =
+        new Blob(
+          [content],
+          {
+            type:
+              "text/plain;charset=utf-8"
+          }
+        );
+
+      const url =
+        URL.createObjectURL(blob);
+
+      const link =
+        document.createElement("a");
+
+      link.href = url;
+
+      link.download =
+        "iptv-results.txt";
+
+      document.body.appendChild(link);
+
+      link.click();
+
+      link.remove();
+
+      setTimeout(
+        () => {
+          URL.revokeObjectURL(url);
+        },
+        100
+      );
+
+      showToast(
+        "TXT descargado correctamente."
+      );
+    }
+
+
+    $("downloadBtn")
+      .addEventListener(
+        "click",
+        downloadTXT
+      );
+
+    $("downloadViewerBtn")
+      .addEventListener(
+        "click",
+        downloadTXT
+      );
+
+
+    /* =========================================================
+       CLEAR RESULTS
+    ========================================================= */
+
+    function clearResults() {
+
+      records = [];
+      cleanLines = [];
+
+      ignoredCount = 0;
+      invalidCount = 0;
+      duplicateCount = 0;
+
+      nextId = 1;
+
+      updateStats(0);
+      renderTable();
+    }
+
+
+    /* =========================================================
+       EMPTY TABLE
+    ========================================================= */
+
+    $("emptyTableBtn")
+      .addEventListener(
+        "click",
+        () => {
+
+          if (!records.length) {
+
+            showToast(
+              "No hay resultados.",
+              true
+            );
+
+            return;
+          }
+
+          const confirmed =
+            window.confirm(
+              "¿Vaciar todos los resultados?"
+            );
+
+          if (!confirmed) {
+            return;
+          }
+
+          clearResults();
+
+          showToast(
+            "Resultados eliminados."
+          );
+        }
+      );
+
+
+    /* =========================================================
+       CLEAR EVERYTHING
+    ========================================================= */
+
+    $("clearBtn")
+      .addEventListener(
+        "click",
+        () => {
+
+          input.value = "";
+          search.value = "";
+
+          filterFormat.value = "all";
+          filterStatus.value = "all";
+
+          updateSearchClearButton();
+
+          clearResults();
+
+          showToast(
+            "Todo fue limpiado."
+          );
+        }
+      );
+
+
+    /* =========================================================
+       PROCESS BUTTONS
+    ========================================================= */
+
+    $("processBtn")
+      .addEventListener(
+        "click",
+        processBatch
+      );
+
+    $("processBtnBottom")
+      .addEventListener(
+        "click",
+        processBatch
+      );
+
+
+    /* =========================================================
+       FILTER EVENTS
+    ========================================================= */
+
+    search.addEventListener(
+      "input",
+      () => {
+
+        updateSearchClearButton();
+
+        renderTable();
+      }
+    );
+
+
+    filterFormat.addEventListener(
+      "change",
+      renderTable
+    );
+
+
+    filterStatus.addEventListener(
+      "change",
+      renderTable
+    );
+
+
+    /* =========================================================
+       KEYBOARD
+    ========================================================= */
+
+    document.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key === "Escape" &&
+          txtModal.classList.contains("show")
+        ) {
+          closeTXT();
+        }
+
+        if (
+          (event.ctrlKey || event.metaKey) &&
+          event.key === "Enter"
+        ) {
+
+          event.preventDefault();
+
+          processBatch();
+        }
+      }
+    );
+
+
+    /* =========================================================
+       INITIALIZE
+    ========================================================= */
+
+    updateStats(0);
+
+    renderTable();
+
+    updateSearchClearButton();
+
+    selectAll.checked = false;
+    selectAll.indeterminate = false;
+
+
+    /* =========================================================
+       DEBUG
+    ========================================================= */
+
+    console.log(
+      "IPTV Adapter Conversion | Local Processing"
+    );
+  </script>
+
+</body>
+</html>
