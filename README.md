@@ -629,9 +629,9 @@ LICENSE
 
 ---
 
- ## 👨‍💻 Autor
+ ## Contacto
 
- **dZh0ni**
+Lead Developer: dZh0ni — Telegram: [@dzh0ni_Dev](https://t.me/dzh0ni_Dev/)
 
  Proyecto:
 
